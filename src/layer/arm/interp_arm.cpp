@@ -137,8 +137,8 @@ int Interp_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& 
             float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
             float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-            linear_coeffs(w, outw, xofs, alpha);
-            linear_coeffs(h, outh, yofs, beta);
+            linear_coeffs(w, outw, xofs, alpha, false);
+            linear_coeffs(h, outh, yofs, beta, false);
 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int q = 0; q < channels; q++)
@@ -172,6 +172,31 @@ int Interp_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& 
                 Mat dst = top_blob.channel(q);
 
                 resize_bicubic_image_pack4(src, dst, alpha, xofs, beta, yofs);
+            }
+
+            delete[] buf;
+        }
+
+        if (resize_type == 4) // bilinear+align corner=true
+        {
+            int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+            int* xofs = buf;        //new int[outw];
+            int* yofs = buf + outw; //new int[outh];
+
+            float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+            float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+            linear_coeffs(w, outw, xofs, alpha, true);
+            linear_coeffs(h, outh, yofs, beta, true);
+
+            #pragma omp parallel for num_threads(opt.num_threads)
+            for (int q = 0; q < channels; q++)
+            {
+                const Mat src = bottom_blob.channel(q);
+                Mat dst = top_blob.channel(q);
+
+                resize_bilinear_image_pack4(src, dst, alpha, xofs, beta, yofs);
             }
 
             delete[] buf;
@@ -217,8 +242,8 @@ int Interp_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& 
         float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
         float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-        linear_coeffs(w, outw, xofs, alpha);
-        linear_coeffs(h, outh, yofs, beta);
+        linear_coeffs(w, outw, xofs, alpha, false);
+        linear_coeffs(h, outh, yofs, beta, false);
 
         #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
@@ -252,6 +277,31 @@ int Interp_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& 
             Mat dst = top_blob.channel(q);
 
             resize_bicubic_image(src, dst, alpha, xofs, beta, yofs);
+        }
+
+        delete[] buf;
+    }
+
+    if (resize_type == 4) // bilinear+align corner=true
+    {
+        int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+        int* xofs = buf;        //new int[outw];
+        int* yofs = buf + outw; //new int[outh];
+
+        float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+        float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+        linear_coeffs(w, outw, xofs, alpha, true);
+        linear_coeffs(h, outh, yofs, beta, true);
+
+        #pragma omp parallel for num_threads(opt.num_threads)
+        for (int q = 0; q < channels; q++)
+        {
+            const Mat src = bottom_blob.channel(q);
+            Mat dst = top_blob.channel(q);
+
+            resize_bilinear_image(src, dst, alpha, xofs, beta, yofs);
         }
 
         delete[] buf;
@@ -328,8 +378,8 @@ int Interp_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<
             float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
             float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-            linear_coeffs(w, outw, xofs, alpha);
-            linear_coeffs(h, outh, yofs, beta);
+            linear_coeffs(w, outw, xofs, alpha, false);
+            linear_coeffs(h, outh, yofs, beta, false);
 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int q = 0; q < channels; q++)
@@ -363,6 +413,31 @@ int Interp_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<
                 Mat dst = top_blob.channel(q);
 
                 resize_bicubic_image_pack4_fp16s(src, dst, alpha, xofs, beta, yofs);
+            }
+
+            delete[] buf;
+        }
+
+        if (resize_type == 4) // bilinear+align corner=true
+        {
+            int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+            int* xofs = buf;        //new int[outw];
+            int* yofs = buf + outw; //new int[outh];
+
+            float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+            float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+            linear_coeffs(w, outw, xofs, alpha, true);
+            linear_coeffs(h, outh, yofs, beta, true);
+
+            #pragma omp parallel for num_threads(opt.num_threads)
+            for (int q = 0; q < channels; q++)
+            {
+                const Mat src = bottom_blob.channel(q);
+                Mat dst = top_blob.channel(q);
+
+                resize_bilinear_image_pack4_fp16s(src, dst, alpha, xofs, beta, yofs);
             }
 
             delete[] buf;
@@ -407,8 +482,8 @@ int Interp_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<
         float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
         float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-        linear_coeffs(w, outw, xofs, alpha);
-        linear_coeffs(h, outh, yofs, beta);
+        linear_coeffs(w, outw, xofs, alpha, false);
+        linear_coeffs(h, outh, yofs, beta, false);
 
         #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
@@ -442,6 +517,31 @@ int Interp_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<
             Mat dst = top_blob.channel(q);
 
             resize_bicubic_image_fp16s(src, dst, alpha, xofs, beta, yofs);
+        }
+
+        delete[] buf;
+    }
+
+    if (resize_type == 4) // bilinear+align corner=true
+    {
+        int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+        int* xofs = buf;        //new int[outw];
+        int* yofs = buf + outw; //new int[outh];
+
+        float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+        float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+        linear_coeffs(w, outw, xofs, alpha, true);
+        linear_coeffs(h, outh, yofs, beta, true);
+
+        #pragma omp parallel for num_threads(opt.num_threads)
+        for (int q = 0; q < channels; q++)
+        {
+            const Mat src = bottom_blob.channel(q);
+            Mat dst = top_blob.channel(q);
+
+            resize_bilinear_image_fp16s(src, dst, alpha, xofs, beta, yofs);
         }
 
         delete[] buf;
@@ -517,8 +617,8 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
             __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
             __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
 
-            linear_coeffs_fp16sa(w, outw, xofs, alpha);
-            linear_coeffs_fp16sa(h, outh, yofs, beta);
+            linear_coeffs_fp16sa(w, outw, xofs, alpha, false);
+            linear_coeffs_fp16sa(h, outh, yofs, beta, false);
 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int q = 0; q < channels; q++)
@@ -552,6 +652,31 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
                 Mat dst = top_blob.channel(q);
 
                 resize_bicubic_image_pack8_fp16sa(src, dst, alpha, xofs, beta, yofs);
+            }
+
+            delete[] buf;
+        }
+
+        if (resize_type == 4) // bilinear+align corner=true
+        {
+            int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+            int* xofs = buf;        //new int[outw];
+            int* yofs = buf + outw; //new int[outh];
+
+            __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
+            __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
+
+            linear_coeffs_fp16sa(w, outw, xofs, alpha, true);
+            linear_coeffs_fp16sa(h, outh, yofs, beta, true);
+
+            #pragma omp parallel for num_threads(opt.num_threads)
+            for (int q = 0; q < channels; q++)
+            {
+                const Mat src = bottom_blob.channel(q);
+                Mat dst = top_blob.channel(q);
+
+                resize_bilinear_image_pack8_fp16sa(src, dst, alpha, xofs, beta, yofs);
             }
 
             delete[] buf;
@@ -602,8 +727,8 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
             __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
             __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
 
-            linear_coeffs_fp16sa(w, outw, xofs, alpha);
-            linear_coeffs_fp16sa(h, outh, yofs, beta);
+            linear_coeffs_fp16sa(w, outw, xofs, alpha, false);
+            linear_coeffs_fp16sa(h, outh, yofs, beta, false);
 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int q = 0; q < channels; q++)
@@ -637,6 +762,31 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
                 Mat dst = top_blob.channel(q);
 
                 resize_bicubic_image_pack4_fp16sa(src, dst, alpha, xofs, beta, yofs);
+            }
+
+            delete[] buf;
+        }
+
+        if (resize_type == 4) // bilinear+align corner=true
+        {
+            int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+            int* xofs = buf;        //new int[outw];
+            int* yofs = buf + outw; //new int[outh];
+
+            __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
+            __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
+
+            linear_coeffs_fp16sa(w, outw, xofs, alpha, true);
+            linear_coeffs_fp16sa(h, outh, yofs, beta, true);
+
+            #pragma omp parallel for num_threads(opt.num_threads)
+            for (int q = 0; q < channels; q++)
+            {
+                const Mat src = bottom_blob.channel(q);
+                Mat dst = top_blob.channel(q);
+
+                resize_bilinear_image_pack4_fp16sa(src, dst, alpha, xofs, beta, yofs);
             }
 
             delete[] buf;
@@ -681,8 +831,8 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
         __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
         __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
 
-        linear_coeffs_fp16sa(w, outw, xofs, alpha);
-        linear_coeffs_fp16sa(h, outh, yofs, beta);
+        linear_coeffs_fp16sa(w, outw, xofs, alpha, false);
+        linear_coeffs_fp16sa(h, outh, yofs, beta, false);
 
         #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
@@ -716,6 +866,31 @@ int Interp_arm::forward_fp16sa(const std::vector<Mat>& bottom_blobs, std::vector
             Mat dst = top_blob.channel(q);
 
             resize_bicubic_image_fp16sa(src, dst, alpha, xofs, beta, yofs);
+        }
+
+        delete[] buf;
+    }
+
+    if (resize_type == 4) // bilinear+align corner=true
+    {
+        int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+        int* xofs = buf;        //new int[outw];
+        int* yofs = buf + outw; //new int[outh];
+
+        __fp16* alpha = (__fp16*)(buf + outw + outh);           //new __fp16[outw * 2];
+        __fp16* beta = (__fp16*)(buf + outw + outh + outw * 2); //new __fp16[outh * 2];
+
+        linear_coeffs_fp16sa(w, outw, xofs, alpha, true);
+        linear_coeffs_fp16sa(h, outh, yofs, beta, true);
+
+        #pragma omp parallel for num_threads(opt.num_threads)
+        for (int q = 0; q < channels; q++)
+        {
+            const Mat src = bottom_blob.channel(q);
+            Mat dst = top_blob.channel(q);
+
+            resize_bilinear_image_fp16sa(src, dst, alpha, xofs, beta, yofs);
         }
 
         delete[] buf;
@@ -793,8 +968,8 @@ int Interp_arm::forward_bf16s(const std::vector<Mat>& bottom_blobs, std::vector<
             float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
             float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-            linear_coeffs(w, outw, xofs, alpha);
-            linear_coeffs(h, outh, yofs, beta);
+            linear_coeffs(w, outw, xofs, alpha, false);
+            linear_coeffs(h, outh, yofs, beta, false);
 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int q = 0; q < channels; q++)
@@ -828,6 +1003,31 @@ int Interp_arm::forward_bf16s(const std::vector<Mat>& bottom_blobs, std::vector<
                 Mat dst = top_blob.channel(q);
 
                 resize_bicubic_image_pack4_bf16s(src, dst, alpha, xofs, beta, yofs);
+            }
+
+            delete[] buf;
+        }
+
+        if (resize_type == 4) // bilinear+align corner=true
+        {
+            int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+            int* xofs = buf;        //new int[outw];
+            int* yofs = buf + outw; //new int[outh];
+
+            float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+            float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+            linear_coeffs(w, outw, xofs, alpha, true);
+            linear_coeffs(h, outh, yofs, beta, true);
+
+            #pragma omp parallel for num_threads(opt.num_threads)
+            for (int q = 0; q < channels; q++)
+            {
+                const Mat src = bottom_blob.channel(q);
+                Mat dst = top_blob.channel(q);
+
+                resize_bilinear_image_pack4_bf16s(src, dst, alpha, xofs, beta, yofs);
             }
 
             delete[] buf;
@@ -873,8 +1073,8 @@ int Interp_arm::forward_bf16s(const std::vector<Mat>& bottom_blobs, std::vector<
         float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
         float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
 
-        linear_coeffs(w, outw, xofs, alpha);
-        linear_coeffs(h, outh, yofs, beta);
+        linear_coeffs(w, outw, xofs, alpha, false);
+        linear_coeffs(h, outh, yofs, beta, false);
 
         #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
@@ -908,6 +1108,31 @@ int Interp_arm::forward_bf16s(const std::vector<Mat>& bottom_blobs, std::vector<
             Mat dst = top_blob.channel(q);
 
             resize_bicubic_image_bf16s(src, dst, alpha, xofs, beta, yofs);
+        }
+
+        delete[] buf;
+    }
+
+    if (resize_type == 4) // bilinear+align corner=true
+    {
+        int* buf = new int[outw + outh + outw * 2 + outh * 2];
+
+        int* xofs = buf;        //new int[outw];
+        int* yofs = buf + outw; //new int[outh];
+
+        float* alpha = (float*)(buf + outw + outh);           //new float[outw * 2];
+        float* beta = (float*)(buf + outw + outh + outw * 2); //new float[outh * 2];
+
+        linear_coeffs(w, outw, xofs, alpha, true);
+        linear_coeffs(h, outh, yofs, beta, true);
+
+        #pragma omp parallel for num_threads(opt.num_threads)
+        for (int q = 0; q < channels; q++)
+        {
+            const Mat src = bottom_blob.channel(q);
+            Mat dst = top_blob.channel(q);
+
+            resize_bilinear_image_bf16s(src, dst, alpha, xofs, beta, yofs);
         }
 
         delete[] buf;

@@ -3410,6 +3410,7 @@ int main(int argc, char** argv)
         else if (op == "Resize")
         {
             std::string mode = get_node_attr_s(node, "mode");
+            std::string align = get_node_attr_s(node, "coordinate_transformation_mode");
 
             std::vector<float> scales;
             std::vector<int> sizes;
@@ -3436,6 +3437,10 @@ int main(int argc, char** argv)
             else if (mode == "linear")
             {
                 resize_type = 2;
+                if (align == "align_corners")
+                {
+                    resize_type = 4;
+                }
             }
             else if (mode == "cubic")
             {
@@ -3697,6 +3702,7 @@ int main(int argc, char** argv)
         else if (op == "Upsample")
         {
             std::string mode = get_node_attr_s(node, "mode");
+            std::string align = get_node_attr_s(node, "coordinate_transformation_mode");
 
             std::vector<float> scales;
 
@@ -3717,6 +3723,10 @@ int main(int argc, char** argv)
             else if (mode == "bilinear" || mode == "linear")
             {
                 resize_type = 2;
+                if (align == "align_corners")
+                {
+                    resize_type = 4;
+                }
             }
             else if (mode == "trilinear")
             {
