@@ -474,7 +474,7 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
 
     if (bottom_blob.dims == 1)
     {
-#pragma omp parallel for num_threads(opt.num_threads)
+        #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
         {
             Mat top_blob_c = top_blob.channel(q);
@@ -489,7 +489,7 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         const float hs = outh ? h / (float)outh : 1.f / height_scale;
         const float ws = outw ? w / (float)outw : 1.f / width_scale;
 
-#pragma omp parallel for num_threads(opt.num_threads)
+        #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
         {
             const float* ptr = bottom_blob.channel(q);
@@ -519,7 +519,7 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         linear_coeffs(w, outw, xofs, alpha, false);
         linear_coeffs(h, outh, yofs, beta, false);
 
-#pragma omp parallel for num_threads(opt.num_threads)
+        #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; ++q)
         {
             const Mat src = bottom_blob.channel(q);
@@ -544,7 +544,7 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         cubic_coeffs(w, outw, xofs, alpha);
         cubic_coeffs(h, outh, yofs, beta);
 
-#pragma omp parallel for num_threads(opt.num_threads)
+        #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; q++)
         {
             const Mat src = bottom_blob.channel(q);
@@ -569,7 +569,7 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         linear_coeffs(w, outw, xofs, alpha, true);
         linear_coeffs(h, outh, yofs, beta, true);
 
-#pragma omp parallel for num_threads(opt.num_threads)
+        #pragma omp parallel for num_threads(opt.num_threads)
         for (int q = 0; q < channels; ++q)
         {
             const Mat src = bottom_blob.channel(q);
